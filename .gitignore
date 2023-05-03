@@ -1,1 +1,5 @@
 .idea/
+*.o
+lcase_*
+matmul_*
+matvec
