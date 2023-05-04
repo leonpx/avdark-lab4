@@ -82,6 +82,29 @@ matmul_sse_block(int i, int j, int k)
          * parameter can be used to restrict to which elements the
          * result is stored, all other elements are set to zero.
          */
+		__m128 a_rows[4], b_cols[4], c_vals[4];
+    	int l;
+
+    	// Load 4x4 block from mat_a and mat_b
+    	for (l = 0; l < 4; l++)
+    	{
+    	    a_rows[l] = _mm_load_ps(&mat_a[i + l][k]);
+    	    b_cols[l] = _mm_load_ps(&mat_b[k + l][j]);
+    	}
+
+    	// Transpose 4x4 block of mat_b
+    	_MM_TRANSPOSE4_PS(b_cols[0], b_cols[1], b_cols[2], b_cols[3]);
+
+    	// Perform dot product of rows of mat_a with columns of mat_b
+    	for (l = 0; l < 4; l++)
+    	{
+    	    c_vals[l] = _mm_load_ps(&mat_c[i + l][j]);
+    	    c_vals[l] = _mm_add_ps(c_vals[l], _mm_dp_ps(a_rows[l], b_cols[0], 0xF1));
+    	    c_vals[l] = _mm_add_ps(c_vals[l], _mm_dp_ps(a_rows[l], b_cols[1], 0xF2));
+    	    c_vals[l] = _mm_add_ps(c_vals[l], _mm_dp_ps(a_rows[l], b_cols[2], 0xF4));
+    	    c_vals[l] = _mm_add_ps(c_vals[l], _mm_dp_ps(a_rows[l], b_cols[3], 0xF8));
+    	    _mm_store_ps(&mat_c[i + l][j], c_vals[l]);
+    	}
 }
 
 /**
@@ -286,9 +309,24 @@ matmul_sse()
          * SSE vectors (i.e. 4 floats) */
         assert(!(SIZE & 0x3));
 
-        /* TASK: Implement your simple matrix multiplication using SSE
-         * here. (Multiply mat_a and mat_b into mat_c.)
-         */
+    	for (i = 0; i < SIZE; i++)
+    	{
+    	    for (k = 0; k < SIZE; k++)
+    	    {
+    	        for (j = 0; j < SIZE; j += 4)
+    	        {
+					__m128 c_col = _mm_load_ps(&mat_c[i][j]);
+
+					__m128 a_val = _mm_set1_ps(mat_a[i][k]);
+    	            __m128 b_col = _mm_load_ps(&mat_b[k][j]);
+    	            __m128 ab_col = _mm_mul_ps(a_val, b_col);
+    	            c_col = _mm_add_ps(c_col, ab_col);
+
+					_mm_store_ps(&mat_c[i][j], c_col);
+				}
+
+    	    }
+    	}
 }
 
 #else

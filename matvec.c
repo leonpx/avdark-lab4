@@ -43,19 +43,6 @@ matvec_sse()
          * SSE vectors (i.e. 4 floats) */
         assert(!(SIZE & 0x3));
 
-        /* TASK: Implement your SSE version of the matrix-vector
-         * multiplication here. (Multiply mat_a and vec_b into vec_c.)
-         */
-        /* HINT: You might find at least the following instructions
-         * useful:
-         *  - _mm_setzero_ps
-         *  - _mm_load_ps
-         *  - _mm_hadd_ps
-         *  - _mm_cvtss_f32
-         *
-         * HINT: You can create the sum of all elements in a vector
-         * using two hadd instructions.
-         */
 		int i, j;
 
 		for (i = 0; i < SIZE; i++)
